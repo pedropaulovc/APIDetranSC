@@ -131,10 +131,27 @@ class ProntuarioVeiculo(object):
         self.__prontuario[u'Histórico de Multas'] = multas
 
     def __parsearUltimoProcesso(self):
-        pass
+        tabela = self.__soup.find("div", id="div_servicos_11" ).table.tbody
+        
+        ultimoProcesso = {}
+        celulas = tabela.findAll('td')
+        for celula in celulas[:5]:
+            dado = celula.findAll(text=True)
+            ultimoProcesso[dado[0]] = dado[1]
+        for i in range(7, len(celulas), 2):
+            chave = celulas[i].findAll(text=True)[0]
+            valor = celulas[i + 1].findAll(text=True)[0]
+            ultimoProcesso[chave] = valor
+            
+        self.__prontuario[u'Último Processo'] = ultimoProcesso
 
+    #TODO: Implementar
     def __parsearRecursoInfracao(self):
-        pass
+        tabela = self.__soup.find("div", id="div_servicos_09" ).table.tbody
+        
+        if tabela.tr.td.find(text=re.compile(u'Nenhuma?')):
+            self.__prontuario[u'Recurso de Infração'] = []
+            return
 
     def obterDado(self, dado):
         return self.__prontuario[dado]
@@ -145,18 +162,7 @@ class ProntuarioVeiculo(object):
     def imprimirDadosDisponiveis(self):
         for c, v in self.__prontuario.items():
             print str(c) + ": " + str(v)
-        print
-        for debito in self.__prontuario[u'Débitos']:
-            print debito
-        print
-        for infracao in self.__prontuario[u'Infrações em Autuação']:
-            print infracao
-        print
-        for multa in self.__prontuario[u'Listagem de Multas']:
-            print multa
-        print
-        for multa in self.__prontuario[u'Histórico de Multas']:
-            print multa
+            
 
 if __name__ == '__main__':
     prontuario = ProntuarioVeiculo(open("../../tmp/prontuarioVeiculo.html").read())
