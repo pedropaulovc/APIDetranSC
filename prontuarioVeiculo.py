@@ -69,7 +69,33 @@ class ProntuarioVeiculo(object):
         self.__prontuario[u'Débitos'] = debitos
 
     def __parsearInfracoesEmAutuacao(self):
-        pass
+        tabela = self.__soup.find("div", id="div_servicos_10" ).table.tbody
+        
+        celulaFilha = lambda tag: tag.name == 'td' and tag.table == None
+        celulas = tabela.findAll(celulaFilha)[3:]
+        
+        infracoes = []
+        for i in range(len(celulas)/7):
+            linha = 7 * i
+            
+            infracao = {}
+            infracao[u'Número'] = celulas[linha].a.string
+            infracao[u'Link'] = celulas[linha].a['href'].strip()
+            infracao[u'Valor'] = celulas[linha + 1].string.strip()
+            infracao[u'Situação'] = celulas[linha + 2].string.strip()
+            infracao[u'Descrição 1'] = celulas[linha + 3].string.strip()
+            infracao[u'Descrição 2'] = celulas[linha + 4].string.strip()
+            infracao[u'Local/Complemento 1'] = celulas[linha + 5].string.strip()
+            infracao[u'Local/Complemento 2'] = celulas[linha + 6].string
+            if infracao[u'Local/Complemento 2'] == None:
+                infracao[u'Local/Complemento 2'] = u''
+            infracao[u'Local/Complemento 2'] = infracao[u'Local/Complemento 2'].strip()
+            
+            print infracao
+            
+            infracoes.append(infracao)
+            
+        self.__prontuario[u'Infrações'] = infracoes
 
     def __parsearListagemMultas(self):
         pass
@@ -97,4 +123,4 @@ class ProntuarioVeiculo(object):
 
 if __name__ == '__main__':
     prontuario = ProntuarioVeiculo(open("../../tmp/prontuarioVeiculo.html").read())
-    prontuario.imprimirDadosDisponiveis()
+#    prontuario.imprimirDadosDisponiveis()
