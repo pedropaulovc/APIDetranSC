@@ -7,7 +7,7 @@ Created on Jan 2, 2012
 '''
 
 from BeautifulSoup.BeautifulSoup import BeautifulSoup
-
+import re
 
 class ProntuarioVeiculo(object):
     '''
@@ -91,17 +91,44 @@ class ProntuarioVeiculo(object):
                 infracao[u'Local/Complemento 2'] = u''
             infracao[u'Local/Complemento 2'] = infracao[u'Local/Complemento 2'].strip()
             
-            print infracao
-            
             infracoes.append(infracao)
             
-        self.__prontuario[u'Infrações'] = infracoes
+        self.__prontuario[u'Infrações em Autuação'] = infracoes
 
+    #TODO: Implementar
     def __parsearListagemMultas(self):
-        pass
+        tabela = self.__soup.find("div", id="div_servicos_04" ).table.tbody
+        
+        if tabela.tr.td.find(text=re.compile(u'Nenhuma?')):
+            self.__prontuario[u'Listagem de Multas'] = []
+            return
 
     def __parsearHistoricoMultas(self):
-        pass
+        tabela = self.__soup.find("div", id="div_servicos_07" ).table.tbody
+        
+        celulaFilha = lambda tag: tag.name == 'td' and tag.table == None
+        celulas = tabela.findAll(celulaFilha)[3:]
+        
+        multas = []
+        for i in range(len(celulas)/7):
+            linha = 7 * i
+            
+            multa = {}
+            multa[u'Número'] = celulas[linha].a.string
+            multa[u'Link'] = celulas[linha].a['href'].strip()
+            multa[u'Lançamento'] = celulas[linha + 1].string.strip()
+            multa[u'Pagamento'] = celulas[linha + 2].string.strip()
+            multa[u'Descrição 1'] = celulas[linha + 3].string.strip()
+            multa[u'Descrição 2'] = celulas[linha + 4].string.strip()
+            multa[u'Local/Complemento 1'] = celulas[linha + 5].string.strip()
+            multa[u'Local/Complemento 2'] = celulas[linha + 6].string
+            if multa[u'Local/Complemento 2'] == None:
+                multa[u'Local/Complemento 2'] = u''
+            multa[u'Local/Complemento 2'] = multa[u'Local/Complemento 2'].strip()
+            
+            multas.append(multa)
+            
+        self.__prontuario[u'Histórico de Multas'] = multas
 
     def __parsearUltimoProcesso(self):
         pass
@@ -118,9 +145,19 @@ class ProntuarioVeiculo(object):
     def imprimirDadosDisponiveis(self):
         for c, v in self.__prontuario.items():
             print str(c) + ": " + str(v)
+        print
         for debito in self.__prontuario[u'Débitos']:
             print debito
+        print
+        for infracao in self.__prontuario[u'Infrações em Autuação']:
+            print infracao
+        print
+        for multa in self.__prontuario[u'Listagem de Multas']:
+            print multa
+        print
+        for multa in self.__prontuario[u'Histórico de Multas']:
+            print multa
 
 if __name__ == '__main__':
     prontuario = ProntuarioVeiculo(open("../../tmp/prontuarioVeiculo.html").read())
-#    prontuario.imprimirDadosDisponiveis()
+    prontuario.imprimirDadosDisponiveis()
