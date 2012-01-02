@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 '''
 Created on Jan 2, 2012
 
@@ -32,26 +34,38 @@ class ProntuarioVeiculo(object):
         
 
     def __parsearDadosVeiculo(self):
-        dados = self.__soup.find("div", id="div_servicos_02" ).table.tbody
+        tabela = self.__soup.find("div", id="div_servicos_02" ).table.tbody
         
-        for celula in dados.findAll('td'):
-            chave = celula.contents[0]
-            if chave.string == None:
-                chave = ''.join(chave.findAll(text=True))
-            chave = chave.strip()
-            
-            valor = celula.span.string
-            if(valor == None):
-                valor = ''.join(celula.span.findAll(text=True))            
-            valor = valor.strip()
-                
-            self.__prontuario[chave] = valor
+        for celula in tabela.findAll('td'):
+            dado = celula.findAll(text=True)
+            if len(dado) == 2:
+                self.__prontuario[dado[0].strip()] = dado[1].strip()
         
-        for k, v in self.__prontuario.items():
-            print str(k) + ": " + str(v)
-
     def __parsearDebitos(self):
-        pass
+        tabela = self.__soup.find("div", id="div_servicos_03" ).table.tbody
+        
+        debitos = []
+        for linha in tabela.findAll('tr')[1:-1]:
+            debito = {}
+            
+            texto = linha.td.findAll(text=True) 
+            if texto == None:
+                texto = ""
+            debito[u'Classe'] = ''.join(texto).strip()
+            
+            link = ""
+            if linha.td.a != None:
+                link = linha.td.a['href'].strip()
+            debito[u'Link'] = link
+            
+            celulas = [u'Número DetranNet', u'Vencimento', u'Valor Nominal(R$)',
+                        u'Multa(R$)', u'Juros(R$)', u'Valor Atual(R$)']
+            for celula, valor in zip(celulas, linha.findAll('td')[1:]):
+                debito[celula] = valor.string.strip()
+            
+            debitos.append(debito)
+        
+        self.__prontuario[u'Débitos'] = debitos
 
     def __parsearInfracoesEmAutuacao(self):
         pass
@@ -73,7 +87,11 @@ class ProntuarioVeiculo(object):
     
     def obterDadosDisponiveis(self):
         return self.__prontuario.keys()
+    
+    def imprimirDadosDisponiveis(self):
+        for c, v in self.__prontuario.items():
+            print str(c) + ": " + str(v)
 
 if __name__ == '__main__':
     prontuario = ProntuarioVeiculo(open("../../tmp/prontuarioVeiculo.html").read())
-    
+    prontuario.imprimirDadosDisponiveis()
