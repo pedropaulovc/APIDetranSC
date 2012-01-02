@@ -5,7 +5,7 @@ Created on Jan 2, 2012
 '''
 
 from PIL import Image
-from vectorCompare import VectorCompare
+from comparadorVetor import ComparadorVetor
 import hashlib
 import os
 
@@ -39,7 +39,7 @@ class Captcha(object):
 
         treino = self.__carregarTreino()
 
-        comparador = VectorCompare()        
+        comparador = ComparadorVetor()        
         resposta = ""
         confianca = 1.0
         for posLetra in posLetrasDesafio:
@@ -50,7 +50,7 @@ class Captcha(object):
             for imagem in treino:
                 for x, y in imagem.iteritems():
                     if len(y) != 0:
-                        chute = (comparador.relation(y[0], self.__montarVetorImagem(letra)), x)
+                        chute = (comparador.relacao(y[0], self.__montarVetorImagem(letra)), x)
                         chutes.append(chute)
 
             chutes.sort(reverse=True)
