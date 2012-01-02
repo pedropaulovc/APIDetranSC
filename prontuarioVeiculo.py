@@ -21,7 +21,8 @@ class ProntuarioVeiculo(object):
         '''
         
         self.__soup = \
-            BeautifulSoup(prontuarioHTML, fromEncoding="iso-8859-1")
+            BeautifulSoup(prontuarioHTML, fromEncoding="iso-8859-1", 
+                          convertEntities=BeautifulSoup.HTML_ENTITIES)
         self.__prontuario = {}
         
         self.__parsearDadosVeiculo()
@@ -91,6 +92,8 @@ class ProntuarioVeiculo(object):
     def imprimirDadosDisponiveis(self):
         for c, v in self.__prontuario.items():
             print str(c) + ": " + str(v)
+        for debito in self.__prontuario[u'Débitos']:
+            print debito
 
 if __name__ == '__main__':
     prontuario = ProntuarioVeiculo(open("../../tmp/prontuarioVeiculo.html").read())
