@@ -8,42 +8,44 @@ Created on Jan 2, 2012
 
 from BeautifulSoup.BeautifulSoup import BeautifulSoup
 import re
+from copy import deepcopy
 
 class ProntuarioVeiculo(object):
     '''
     classdocs
     '''
 
-
-    def __init__(self, prontuarioHTML):
+    def __init__(self, prontuario_html):
         '''
         Constructor
         '''
         
         self.__soup = \
-            BeautifulSoup(prontuarioHTML, fromEncoding="iso-8859-1", 
+            BeautifulSoup(prontuario_html, fromEncoding='iso-8859-1', 
                           convertEntities=BeautifulSoup.HTML_ENTITIES)
         self.__prontuario = {}
         
-        self.__parsearDadosVeiculo()
-        self.__parsearDebitos()
-        self.__parsearInfracoesEmAutuacao()
-        self.__parsearListagemMultas()
-        self.__parsearHistoricoMultas()
-        self.__parsearUltimoProcesso()
-        self.__parsearRecursoInfracao()
-        
-
-    def __parsearDadosVeiculo(self):
-        tabela = self.__soup.find("div", id="div_servicos_02" ).table.tbody
+        self._parsear_dados_veiculo()
+        self._parsear_debitos()
+        self._parsear_infracoes_em_autuacao()
+        self._parsear_listagem_multas()
+        self._parsear_historico_multas()
+        self._parsear_ultimo_processo()
+        self._parsear_recurso_infracao()
+    
+    def obter_prontuario(self):
+        return deepcopy(self.__prontuario)
+            
+    def _parsear_dados_veiculo(self):
+        tabela = self.__soup.find('div', id='div_servicos_02' ).table.tbody
         
         for celula in tabela.findAll('td'):
             dado = celula.findAll(text=True)
             if len(dado) == 2:
                 self.__prontuario[dado[0].strip()] = dado[1].strip()
         
-    def __parsearDebitos(self):
-        tabela = self.__soup.find("div", id="div_servicos_03" ).table.tbody
+    def _parsear_debitos(self):
+        tabela = self.__soup.find('div', id='div_servicos_03' ).table.tbody
         
         debitos = []
         for linha in tabela.findAll('tr')[1:-1]:
@@ -51,10 +53,10 @@ class ProntuarioVeiculo(object):
             
             texto = linha.td.findAll(text=True) 
             if texto == None:
-                texto = ""
+                texto = ''
             debito[u'Classe'] = ''.join(texto).strip()
             
-            link = ""
+            link = ''
             if linha.td.a != None:
                 link = linha.td.a['href'].strip()
             debito[u'Link'] = link
@@ -68,11 +70,11 @@ class ProntuarioVeiculo(object):
         
         self.__prontuario[u'Débitos'] = debitos
 
-    def __parsearInfracoesEmAutuacao(self):
-        tabela = self.__soup.find("div", id="div_servicos_10" ).table.tbody
+    def _parsear_infracoes_em_autuacao(self):
+        tabela = self.__soup.find('div', id='div_servicos_10' ).table.tbody
         
-        celulaFilha = lambda tag: tag.name == 'td' and tag.table == None
-        celulas = tabela.findAll(celulaFilha)[3:]
+        celula_filha = lambda tag: tag.name == 'td' and tag.table == None
+        celulas = tabela.findAll(celula_filha)[3:]
         
         infracoes = []
         for i in range(len(celulas)/7):
@@ -96,18 +98,18 @@ class ProntuarioVeiculo(object):
         self.__prontuario[u'Infrações em Autuação'] = infracoes
 
     #TODO: Implementar
-    def __parsearListagemMultas(self):
-        tabela = self.__soup.find("div", id="div_servicos_04" ).table.tbody
+    def _parsear_listagem_multas(self):
+        tabela = self.__soup.find('div', id='div_servicos_04' ).table.tbody
         
         if tabela.tr.td.find(text=re.compile(u'Nenhuma?')):
             self.__prontuario[u'Listagem de Multas'] = []
             return
 
-    def __parsearHistoricoMultas(self):
-        tabela = self.__soup.find("div", id="div_servicos_07" ).table.tbody
+    def _parsear_historico_multas(self):
+        tabela = self.__soup.find('div', id='div_servicos_07' ).table.tbody
         
-        celulaFilha = lambda tag: tag.name == 'td' and tag.table == None
-        celulas = tabela.findAll(celulaFilha)[3:]
+        celula_filha = lambda tag: tag.name == 'td' and tag.table == None
+        celulas = tabela.findAll(celula_filha)[3:]
         
         multas = []
         for i in range(len(celulas)/7):
@@ -130,40 +132,30 @@ class ProntuarioVeiculo(object):
             
         self.__prontuario[u'Histórico de Multas'] = multas
 
-    def __parsearUltimoProcesso(self):
-        tabela = self.__soup.find("div", id="div_servicos_11" ).table.tbody
+    def _parsear_ultimo_processo(self):
+        tabela = self.__soup.find('div', id='div_servicos_11' ).table.tbody
         
-        ultimoProcesso = {}
+        ultimo_processo = {}
         celulas = tabela.findAll('td')
         for celula in celulas[:5]:
             dado = celula.findAll(text=True)
-            ultimoProcesso[dado[0]] = dado[1]
+            ultimo_processo[dado[0]] = dado[1]
         for i in range(7, len(celulas), 2):
             chave = celulas[i].findAll(text=True)[0]
             valor = celulas[i + 1].findAll(text=True)[0]
-            ultimoProcesso[chave] = valor
+            ultimo_processo[chave] = valor
             
-        self.__prontuario[u'Último Processo'] = ultimoProcesso
+        self.__prontuario[u'Último Processo'] = ultimo_processo
 
     #TODO: Implementar
-    def __parsearRecursoInfracao(self):
-        tabela = self.__soup.find("div", id="div_servicos_09" ).table.tbody
+    def _parsear_recurso_infracao(self):
+        tabela = self.__soup.find('div', id='div_servicos_09' ).table.tbody
         
         if tabela.tr.td.find(text=re.compile(u'Nenhuma?')):
             self.__prontuario[u'Recurso de Infração'] = []
             return
 
-    def obterDado(self, dado):
-        return self.__prontuario[dado]
-    
-    def obterDadosDisponiveis(self):
-        return self.__prontuario.keys()
-    
-    def imprimirDadosDisponiveis(self):
-        for c, v in self.__prontuario.items():
-            print str(c) + ": " + str(v)
-            
-
 if __name__ == '__main__':
-    prontuario = ProntuarioVeiculo(open("../../tmp/prontuarioVeiculo.html").read())
-    prontuario.imprimirDadosDisponiveis()
+    prontuario = ProntuarioVeiculo(open('../../tmp/prontuarioVeiculo.html').read())
+    for k, v in prontuario.obter_prontuario().items():
+        print str(k) + ': ' + str(v)

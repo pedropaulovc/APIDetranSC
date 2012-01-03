@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on Jan 2, 2012
 
@@ -14,8 +15,8 @@ class ComparadorVetor:
         return math.sqrt(total)
 
     def relacao(self, concordancia1, concordancia2):
-        maiorValor = 0
+        maior_valor = 0
         for palavra, contagem in concordancia1.iteritems():
             if concordancia2.has_key(palavra):
-                maiorValor += contagem * concordancia2[palavra]
-        return maiorValor / (self.magnitude(concordancia1) * self.magnitude(concordancia2))
+                maior_valor += contagem * concordancia2[palavra]
+        return maior_valor / (self.magnitude(concordancia1) * self.magnitude(concordancia2))

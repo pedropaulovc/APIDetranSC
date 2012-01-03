@@ -1,3 +1,5 @@
-#Mon Jan 02 13:26:33 BRST 2012
+#Tue Jan 03 17:41:36 BRST 2012
 eclipse.preferences.version=1
-encoding/prontuarioVeiculo.py=utf-8
+encoding//captcha/captcha.py=utf-8
+encoding//captcha/comparador_vetor.py=utf-8
+encoding/prontuario_veiculo.py=utf-8
